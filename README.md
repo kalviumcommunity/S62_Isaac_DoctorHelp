@@ -1,11 +1,12 @@
-# DoctorHelp
-Medical Knowledge Assistant for Doctors
-Overview: Doctors can describe symptoms or upload case notes. The assistant fetches relevant studies and outputs structured diagnosis suggestions.
+# DoctorHelp — Medical Knowledge Assistant for Doctors
 
-Prompting: Use clinical prompts for history-taking or differential diagnosis.
+## What
+DoctorHelp is a clinical decision-support assistant for doctors: upload case notes or type symptoms, the assistant fetches relevant studies, generates a differential, and recommends tests. It is **not** a clinical decision system — always require clinician verification.
 
-RAG: Pull data from medical journals (e.g., PubMed), drug databases.
-
-Structured Output: Create structured tables of symptoms → probable diagnoses → recommended tests.
-
-Function Calling: Integrate with scheduling, test recommendation APIs.
+## High-level architecture
+- Frontend: React (Vite) — case entry, settings (temperature/top_p/top_k), view citations.
+- Backend: Node + TypeScript + Express — API endpoints for diagnosis, ingestion, embeddings, prompt building.
+- Vector DB: Pinecone / pgvector / Weaviate (pluggable)
+- LLM: OpenAI/other LLM for generation + OpenAI embeddings for RAG
+- Storage: S3 or local for documents
+- CI: GitHub Actions (lint, test)
