@@ -67,35 +67,40 @@ const generateClinicalSuggestions = async (req, res) => {
         message: "Provide caseNotes or symptoms",
       });
     }
-    // ✅ ZERO-SHOT
     
-    // const prompt = `
-    // Provide decision-support for this clinical description:
-    // "${caseNotes || symptoms}"
+    // ✅ ZERO-SHOT (commented)
+    /*
+    const prompt = `
+    Provide decision-support for this clinical description:
+    "${caseNotes || symptoms}"
 
-    // Respond ONLY as JSON:
-    // {
-    //   "diagnoses": [
-    //     { "name": "Dx", "probability": 0.0, "reasoning": "why", "recommended_tests": ["..."], "citations": ["PMID/DOI/URL"] }
-    //   ],
-    //   "recommendations": ["general next steps"]
-    // }`;
+    Respond ONLY as JSON:
+    {
+      "diagnoses": [
+        { "name": "Dx", "probability": 0.0, "reasoning": "why", "recommended_tests": ["..."], "citations": ["PMID/DOI/URL"] }
+      ],
+      "recommendations": ["general next steps"]
+    }`;
+    */
 
-    // ✅ ONE-SHOT
-    // const prompt = `
-    // Input:
-    // Age: 45 | Sex: M
-    // Case: chest pain on exertion, no fever
-    // Output(JSON only):
-    // { "diagnoses":[{"name":"Stable angina","probability":0.6,"reasoning":"...", "recommended_tests":["ECG","Troponin"],"citations":[]},{"name":"GERD","probability":0.2,"reasoning":"...","recommended_tests":["PPI trial"],"citations":[]}], "recommendations":["Assess risk factors"] }
+    // ✅ ONE-SHOT (commented)
+    /*
+    const prompt = `
+    Input:
+    Age: 45 | Sex: M
+    Case: chest pain on exertion, no fever
+    Output(JSON only):
+    { "diagnoses":[{"name":"Stable angina","probability":0.6,"reasoning":"...", "recommended_tests":["ECG","Troponin"],"citations":[]},{"name":"GERD","probability":0.2,"reasoning":"...","recommended_tests":["PPI trial"],"citations":[]}], "recommendations":["Assess risk factors"] }
 
-    // Now follow the same JSON format for:
-    // Age: ${age ?? "?"} | Sex: ${sex ?? "?"}
-    // Case: ${caseNotes || symptoms}
-    // Output(JSON only):
-    // `;
+    Now follow the same JSON format for:
+    Age: ${age ?? "?"} | Sex: ${sex ?? "?"}
+    Case: ${caseNotes || symptoms}
+    Output(JSON only):
+    `;
+    */
 
-    // ✅ MULTI-SHOT
+    // ✅ MULTI-SHOT (commented)
+    /*
     const prompt = `
     Example 1
     Input: Age 6 | Sex: F | Case: fever + sore throat
@@ -110,24 +115,27 @@ const generateClinicalSuggestions = async (req, res) => {
     Case: ${caseNotes || symptoms}
     Output(JSON only):
     `;
+    */
 
-    // ✅ SYSTEM + USER (concatenate into one prompt — Gemini doesn’t have roles)
-    // const system = `
-    // You are DoctorHelp, a clinical decision-support assistant for licensed clinicians.
-    // - Provide a prioritized differential (top 3) with brief reasoning.
-    // - Recommend next diagnostic tests.
-    // - Include citations when possible.
-    // - Return ONLY JSON with fields: diagnoses[], recommendations[].
-    // - Do NOT provide definitive diagnoses; this is not a medical device.
-    // `;
-    // const user = `Age: ${age ?? "?"} | Sex: ${sex ?? "?"}
-    // Allergies: ${allergies ?? "Unknown"} | Meds: ${medications ?? "Not listed"} | Duration: ${duration ?? "Unstated"}
-    // Case: ${caseNotes || symptoms}
-    // Output(JSON only):`;
-    // const prompt = `${system}\n\n${user}`;
+    // ✅ SYSTEM + USER (commented)
+    /*
+    const system = `
+    You are DoctorHelp, a clinical decision-support assistant for licensed clinicians.
+    - Provide a prioritized differential (top 3) with brief reasoning.
+    - Recommend next diagnostic tests.
+    - Include citations when possible.
+    - Return ONLY JSON with fields: diagnoses[], recommendations[].
+    - Do NOT provide definitive diagnoses; this is not a medical device.
+    `;
+    const user = `Age: ${age ?? "?"} | Sex: ${sex ?? "?"}
+    Allergies: ${allergies ?? "Unknown"} | Meds: ${medications ?? "Not listed"} | Duration: ${duration ?? "Unstated"}
+    Case: ${caseNotes || symptoms}
+    Output(JSON only):`;
+    const prompt = `${system}\n\n${user}`;
+    */
     
 
-    // // ✅ DYNAMIC PROMPTING (+ optional RAG)
+    // ✅ DYNAMIC PROMPTING (+ optional RAG)
     let contextBits = [];
     if (age) contextBits.push(`Age: ${age}`);
     if (sex) contextBits.push(`Sex: ${sex}`);
@@ -151,33 +159,33 @@ const generateClinicalSuggestions = async (req, res) => {
       }
     }
 
-//     const prompt = `
-// You are DoctorHelp, a clinical decision-support assistant for licensed clinicians.
-// Follow these rules:
-// - Provide a prioritized differential (top 3) with probabilities (0-1) and short reasoning.
-// - Recommend focused next diagnostic tests.
-// - Include citations array with identifiers (PMID/DOI/URL) if available.
-// - Return ONLY valid JSON (no markdown fences, no extra text).
+    const prompt = `
+You are DoctorHelp, a clinical decision-support assistant for licensed clinicians.
+Follow these rules:
+- Provide a prioritized differential (top 3) with probabilities (0-1) and short reasoning.
+- Recommend focused next diagnostic tests.
+- Include citations array with identifiers (PMID/DOI/URL) if available.
+- Return ONLY valid JSON (no markdown fences, no extra text).
 
-// Patient/context:
-// ${clinicalHeader}
+Patient/context:
+${clinicalHeader}
 
-// Case notes:
-// ${baseCase}
+Case notes:
+${baseCase}
 
-// ${citationsBlock}
+${citationsBlock}
 
-// JSON schema to follow:
-// {
-//   "diagnoses": [
-//     { "name": "string", "probability": 0-1, "reasoning": "string",
-//       "recommended_tests": ["string"], "citations": ["string"] }
-//   ],
-//   "recommendations": ["string"]
-// }
+JSON schema to follow:
+{
+  "diagnoses": [
+    { "name": "string", "probability": 0-1, "reasoning": "string",
+      "recommended_tests": ["string"], "citations": ["string"] }
+  ],
+  "recommendations": ["string"]
+}
 
-// Now respond with JSON only:
-// `;
+Now respond with JSON only:
+`;
 
     // ==========================================================
     // SAMPLING CONTROLS (Temperature / Top-P / Top-K / Stop)
