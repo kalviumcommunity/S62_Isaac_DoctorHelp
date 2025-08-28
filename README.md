@@ -5,7 +5,7 @@ DoctorHelp is a clinical decision-support assistant for doctors: upload case not
 
 ## High-level architecture
 - Frontend: React (Vite) — case entry, settings (temperature/top_p/top_k), view citations.
-- Backend: Node + TypeScript + Express — API endpoints for diagnosis, ingestion, embeddings, prompt building.
+- Backend: Node + Javascript + Express — API endpoints for diagnosis, ingestion, embeddings, prompt building.
 - Vector DB: Pinecone / pgvector / Weaviate (pluggable)
 - LLM: OpenAI/other LLM for generation + OpenAI embeddings for RAG
 - Storage: S3 or local for documents
