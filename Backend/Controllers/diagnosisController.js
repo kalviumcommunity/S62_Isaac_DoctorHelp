@@ -69,20 +69,19 @@ const generateClinicalSuggestions = async (req, res) => {
     }
     // ✅ ZERO-SHOT
     
-    const prompt = `
-    Provide decision-support for this clinical description:
-    "${caseNotes || symptoms}"
+    // const prompt = `
+    // Provide decision-support for this clinical description:
+    // "${caseNotes || symptoms}"
 
-    Respond ONLY as JSON:
-    {
-      "diagnoses": [
-        { "name": "Dx", "probability": 0.0, "reasoning": "why", "recommended_tests": ["..."], "citations": ["PMID/DOI/URL"] }
-      ],
-      "recommendations": ["general next steps"]
-    }`;
+    // Respond ONLY as JSON:
+    // {
+    //   "diagnoses": [
+    //     { "name": "Dx", "probability": 0.0, "reasoning": "why", "recommended_tests": ["..."], "citations": ["PMID/DOI/URL"] }
+    //   ],
+    //   "recommendations": ["general next steps"]
+    // }`;
 
     // ✅ ONE-SHOT
-    /*
     const prompt = `
     Input:
     Age: 45 | Sex: M
@@ -95,7 +94,6 @@ const generateClinicalSuggestions = async (req, res) => {
     Case: ${caseNotes || symptoms}
     Output(JSON only):
     `;
-    */
 
     // ✅ MULTI-SHOT
     /*
