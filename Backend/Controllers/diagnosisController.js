@@ -82,21 +82,20 @@ const generateClinicalSuggestions = async (req, res) => {
     // }`;
 
     // ✅ ONE-SHOT
-    const prompt = `
-    Input:
-    Age: 45 | Sex: M
-    Case: chest pain on exertion, no fever
-    Output(JSON only):
-    { "diagnoses":[{"name":"Stable angina","probability":0.6,"reasoning":"...", "recommended_tests":["ECG","Troponin"],"citations":[]},{"name":"GERD","probability":0.2,"reasoning":"...","recommended_tests":["PPI trial"],"citations":[]}], "recommendations":["Assess risk factors"] }
+    // const prompt = `
+    // Input:
+    // Age: 45 | Sex: M
+    // Case: chest pain on exertion, no fever
+    // Output(JSON only):
+    // { "diagnoses":[{"name":"Stable angina","probability":0.6,"reasoning":"...", "recommended_tests":["ECG","Troponin"],"citations":[]},{"name":"GERD","probability":0.2,"reasoning":"...","recommended_tests":["PPI trial"],"citations":[]}], "recommendations":["Assess risk factors"] }
 
-    Now follow the same JSON format for:
-    Age: ${age ?? "?"} | Sex: ${sex ?? "?"}
-    Case: ${caseNotes || symptoms}
-    Output(JSON only):
-    `;
+    // Now follow the same JSON format for:
+    // Age: ${age ?? "?"} | Sex: ${sex ?? "?"}
+    // Case: ${caseNotes || symptoms}
+    // Output(JSON only):
+    // `;
 
     // ✅ MULTI-SHOT
-    /*
     const prompt = `
     Example 1
     Input: Age 6 | Sex: F | Case: fever + sore throat
@@ -111,7 +110,6 @@ const generateClinicalSuggestions = async (req, res) => {
     Case: ${caseNotes || symptoms}
     Output(JSON only):
     `;
-    */
 
     // ✅ SYSTEM + USER (concatenate into one prompt — Gemini doesn’t have roles)
     /*
