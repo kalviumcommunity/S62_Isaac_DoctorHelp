@@ -52,7 +52,7 @@ const generateClinicalSuggestions = async (req, res) => {
       medications,
       duration,
       // sampling controls (optional; forwarded to model)
-      temperature,
+      temperature = 0.1, // Default to low temperature for clinical determinism
       topP,
       topK,
       stopSequences,
@@ -191,7 +191,8 @@ Now respond with JSON only:
     // SAMPLING CONTROLS (Temperature / Top-P / Top-K / Stop)
     // ==========================================================
     const generationConfig = {
-      // Sensible defaults for clinical determinism:
+      // Clinical applications require low temperature (0.1) for determinism
+      // This reduces hallucinations and increases reproducibility
       temperature: typeof temperature === "number" ? temperature : 0.1,
       topP: typeof topP === "number" ? topP : 0.95,
       topK: typeof topK === "number" ? topK : 40,
