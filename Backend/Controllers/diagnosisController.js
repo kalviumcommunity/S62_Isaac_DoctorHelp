@@ -112,23 +112,22 @@ const generateClinicalSuggestions = async (req, res) => {
     `;
 
     // ✅ SYSTEM + USER (concatenate into one prompt — Gemini doesn’t have roles)
-    /*
-    const system = `
-    You are DoctorHelp, a clinical decision-support assistant for licensed clinicians.
-    - Provide a prioritized differential (top 3) with brief reasoning.
-    - Recommend next diagnostic tests.
-    - Include citations when possible.
-    - Return ONLY JSON with fields: diagnoses[], recommendations[].
-    - Do NOT provide definitive diagnoses; this is not a medical device.
-    `;
-    const user = `Age: ${age ?? "?"} | Sex: ${sex ?? "?"}
-    Allergies: ${allergies ?? "Unknown"} | Meds: ${medications ?? "Not listed"} | Duration: ${duration ?? "Unstated"}
-    Case: ${caseNotes || symptoms}
-    Output(JSON only):`;
-    const prompt = `${system}\n\n${user}`;
-    */
+    // const system = `
+    // You are DoctorHelp, a clinical decision-support assistant for licensed clinicians.
+    // - Provide a prioritized differential (top 3) with brief reasoning.
+    // - Recommend next diagnostic tests.
+    // - Include citations when possible.
+    // - Return ONLY JSON with fields: diagnoses[], recommendations[].
+    // - Do NOT provide definitive diagnoses; this is not a medical device.
+    // `;
+    // const user = `Age: ${age ?? "?"} | Sex: ${sex ?? "?"}
+    // Allergies: ${allergies ?? "Unknown"} | Meds: ${medications ?? "Not listed"} | Duration: ${duration ?? "Unstated"}
+    // Case: ${caseNotes || symptoms}
+    // Output(JSON only):`;
+    // const prompt = `${system}\n\n${user}`;
+    
 
-    // ✅ DYNAMIC PROMPTING (+ optional RAG)
+    // // ✅ DYNAMIC PROMPTING (+ optional RAG)
     let contextBits = [];
     if (age) contextBits.push(`Age: ${age}`);
     if (sex) contextBits.push(`Sex: ${sex}`);
@@ -198,7 +197,15 @@ const generateClinicalSuggestions = async (req, res) => {
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       generationConfig,
     });
-
+    const usage = result.response.usageMetadata;
+    if (usage) {
+      console.log("🔢 Token usage:");
+      console.log(`   Input tokens: ${usage.promptTokenCount}`);
+      console.log(`   Output tokens: ${usage.candidatesTokenCount}`);
+      console.log(`   Total tokens: ${usage.totalTokenCount}`);
+    } else {
+      console.log("⚠️ No usage metadata available from Gemini response.");
+    }
     let text = result.response.text() || "";
 
     // Strip markdown fences if the model disobeys
