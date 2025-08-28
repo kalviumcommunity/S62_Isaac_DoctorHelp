@@ -133,9 +133,62 @@ const generateClinicalSuggestions = async (req, res) => {
     Output(JSON only):`;
     const prompt = `${system}\n\n${user}`;
     */
-    
 
-    // ✅ DYNAMIC PROMPTING (+ optional RAG)
+    // ✅ DYNAMIC PROMPTING (commented)
+    /*
+    let contextBits = [];
+    if (age) contextBits.push(`Age: ${age}`);
+    if (sex) contextBits.push(`Sex: ${sex}`);
+    if (allergies) contextBits.push(`Allergies: ${allergies}`);
+    if (medications) contextBits.push(`Medications: ${medications}`);
+    if (duration) contextBits.push(`Duration: ${duration}`);
+
+    const clinicalHeader = contextBits.length ? contextBits.join(" | ") : "No demographics provided";
+    const baseCase = (caseNotes || symptoms || "").slice(0, maxContextChars);
+
+    let citationsBlock = "";
+    let evidence = [];
+    if (useRag) {
+      evidence = await fetchEvidence(baseCase);
+      if (evidence.length) {
+        const items = evidence
+          .slice(0, 5)
+          .map((d, i) => `-${i + 1}. ${d.id}: ${d.title}\n  ${d.snippet}`)
+          .join("\n");
+        citationsBlock = `\nRelevant evidence snippets:\n${items}\n`;
+      }
+    }
+
+    const prompt = `
+    You are DoctorHelp, a clinical decision-support assistant for licensed clinicians.
+    Follow these rules:
+    - Provide a prioritized differential (top 3) with probabilities (0-1) and short reasoning.
+    - Recommend focused next diagnostic tests.
+    - Include citations array with identifiers (PMID/DOI/URL) if available.
+    - Return ONLY valid JSON (no markdown fences, no extra text).
+
+    Patient/context:
+    ${clinicalHeader}
+
+    Case notes:
+    ${baseCase}
+
+    ${citationsBlock}
+
+    JSON schema to follow:
+    {
+      "diagnoses": [
+        { "name": "string", "probability": 0-1, "reasoning": "string",
+          "recommended_tests": ["string"], "citations": ["string"] }
+      ],
+      "recommendations": ["string"]
+    }
+
+    Now respond with JSON only:
+    `;
+    */
+    
+    // ✅ CHAIN OF THOUGHT PROMPTING
     let contextBits = [];
     if (age) contextBits.push(`Age: ${age}`);
     if (sex) contextBits.push(`Sex: ${sex}`);
@@ -161,11 +214,32 @@ const generateClinicalSuggestions = async (req, res) => {
 
     const prompt = `
 You are DoctorHelp, a clinical decision-support assistant for licensed clinicians.
-Follow these rules:
-- Provide a prioritized differential (top 3) with probabilities (0-1) and short reasoning.
-- Recommend focused next diagnostic tests.
-- Include citations array with identifiers (PMID/DOI/URL) if available.
-- Return ONLY valid JSON (no markdown fences, no extra text).
+Follow these steps to analyze the case:
+
+1. First, identify the key symptoms and findings from the case notes.
+2. Consider the patient demographics and how they might affect differential diagnosis.
+3. Generate a list of possible conditions that could explain these findings.
+4. For each condition, assess its probability based on:
+   - How well it explains the symptoms
+   - Patient risk factors
+   - Epidemiology
+   - Any relevant evidence from literature
+5. For the most likely conditions, recommend specific diagnostic tests to confirm or rule them out.
+6. Finally, provide general recommendations for next steps.
+
+After completing this reasoning process, output ONLY valid JSON with the following structure:
+{
+  "diagnoses": [
+    { 
+      "name": "string", 
+      "probability": 0-1, 
+      "reasoning": "string",
+      "recommended_tests": ["string"], 
+      "citations": ["string"] 
+    }
+  ],
+  "recommendations": ["string"]
+}
 
 Patient/context:
 ${clinicalHeader}
@@ -175,16 +249,7 @@ ${baseCase}
 
 ${citationsBlock}
 
-JSON schema to follow:
-{
-  "diagnoses": [
-    { "name": "string", "probability": 0-1, "reasoning": "string",
-      "recommended_tests": ["string"], "citations": ["string"] }
-  ],
-  "recommendations": ["string"]
-}
-
-Now respond with JSON only:
+Now think through this case step by step, then provide your final answer as JSON only:
 `;
 
     // ==========================================================
