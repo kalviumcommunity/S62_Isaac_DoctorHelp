@@ -117,22 +117,78 @@ const generateClinicalSuggestions = async (req, res) => {
     `;
     */
 
-    // ✅ SYSTEM + USER (commented)
-    /*
+    // ✅ SYSTEM + USER PROMPTING
+    // RTFC Framework Implementation:
+    // R - Role: Define the AI's role as a clinical decision-support assistant
+    // T - Task: Provide prioritized differential diagnosis with probabilities and recommendations
+    // F - Format: Strict JSON output with specific schema
+    // C - Constraints: Not a medical device, for licensed clinicians only, include citations
+    
     const system = `
-    You are DoctorHelp, a clinical decision-support assistant for licensed clinicians.
-    - Provide a prioritized differential (top 3) with brief reasoning.
-    - Recommend next diagnostic tests.
-    - Include citations when possible.
-    - Return ONLY JSON with fields: diagnoses[], recommendations[].
-    - Do NOT provide definitive diagnoses; this is not a medical device.
-    `;
-    const user = `Age: ${age ?? "?"} | Sex: ${sex ?? "?"}
-    Allergies: ${allergies ?? "Unknown"} | Meds: ${medications ?? "Not listed"} | Duration: ${duration ?? "Unstated"}
-    Case: ${caseNotes || symptoms}
-    Output(JSON only):`;
+You are DoctorHelp, a clinical decision-support assistant for licensed clinicians.
+- ROLE: You are an AI assistant that provides clinical decision support, not definitive diagnoses
+- TASK: Provide a prioritized differential diagnosis (top 3-5 conditions) with:
+  * Probability estimates (0-1 scale)
+  * Brief clinical reasoning for each condition
+  * Recommended diagnostic tests to confirm/rule out each condition
+  * Citations from medical literature when available
+- FORMAT: Return ONLY valid JSON with this exact structure:
+{
+  "diagnoses": [
+    { 
+      "name": "string", 
+      "probability": number (0-1), 
+      "reasoning": "string",
+      "recommended_tests": ["string"], 
+      "citations": ["string"] 
+    }
+  ],
+  "recommendations": ["string"]
+}
+- CONSTRAINTS:
+  * This is not a medical device and cannot provide definitive diagnoses
+  * For licensed healthcare professionals only
+  * Always include probability estimates
+  * Prioritize based on clinical likelihood and urgency
+  * Include relevant risk factors from patient demographics
+`;
+
+    // Build user context with available information
+    let contextBits = [];
+    if (age) contextBits.push(`Age: ${age}`);
+    if (sex) contextBits.push(`Sex: ${sex}`);
+    if (allergies) contextBits.push(`Allergies: ${allergies}`);
+    if (medications) contextBits.push(`Medications: ${medications}`);
+    if (duration) contextBits.push(`Duration: ${duration}`);
+
+    const clinicalHeader = contextBits.length ? contextBits.join(" | ") : "No demographics provided";
+    const baseCase = (caseNotes || symptoms || "").slice(0, maxContextChars);
+
+    // Add RAG evidence if enabled
+    let citationsBlock = "";
+    let evidence = [];
+    if (useRag) {
+      evidence = await fetchEvidence(baseCase);
+      if (evidence.length) {
+        citationsBlock = `\nRelevant clinical evidence to consider:\n`;
+        evidence.slice(0, 3).forEach((item, index) => {
+          citationsBlock += `${index + 1}. ${item.title}: ${item.snippet}\n`;
+        });
+      }
+    }
+
+    const user = `Patient Context:
+${clinicalHeader}
+
+Case Presentation:
+${baseCase}
+
+${citationsBlock}
+
+Please provide your clinical analysis in the specified JSON format:`;
+
+    // Combine system and user prompts (Gemini doesn't have native role support)
     const prompt = `${system}\n\n${user}`;
-    */
 
     // ✅ DYNAMIC PROMPTING (commented)
     /*
@@ -188,7 +244,8 @@ const generateClinicalSuggestions = async (req, res) => {
     `;
     */
     
-    // ✅ CHAIN OF THOUGHT PROMPTING
+    // ✅ CHAIN OF THOUGHT PROMPTING (commented)
+    /*
     let contextBits = [];
     if (age) contextBits.push(`Age: ${age}`);
     if (sex) contextBits.push(`Sex: ${sex}`);
@@ -251,6 +308,7 @@ ${citationsBlock}
 
 Now think through this case step by step, then provide your final answer as JSON only:
 `;
+*/
 
     // ==========================================================
     // SAMPLING CONTROLS (Temperature / Top-P / Top-K / Stop)
